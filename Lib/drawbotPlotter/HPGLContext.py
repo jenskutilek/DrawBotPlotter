@@ -418,26 +418,3 @@ class HPGLContext(BaseContext):
     
     def _transform(self, transform):
         self._state.transformMatrix = self._state.transformMatrix.transform(transform)
-    
-    
-    # Shortcut methods
-    # These would be handled by the general path drawing otherwise
-    
-    """
-    def oval(self, x, y, w, h):
-        if w == h:
-            hp = HPGLPen(self._state)
-            hp.oval(x, y, w, h)
-            self._hpglData.write(hp.hpgl)
-        else:
-            super(HPGLContext, self).oval(self, x, y, w, h)
-    
-    
-    def rect(self, x, y, w, h):
-        if self._state.transformMatrix is None:
-            hp = HPGLPen(self._state)
-            hp.rect(x, y, w, h)
-            self._hpglData.write(hp.hpgl)
-        else:
-            super(HPGLContext, self).rect(x, y, w, h)
-    """
