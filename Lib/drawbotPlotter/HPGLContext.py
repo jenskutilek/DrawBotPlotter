@@ -46,7 +46,26 @@ def formatPoint(pt, allow_int=False):
     x = formatNumber(pt[0], allow_int)
     y = formatNumber(pt[1], allow_int)
     return (x, y)
-        
+    
+
+
+def rects_intersect(rect1, rect2):
+    xMin1 = rect1[0]
+    yMin1 = rect1[1]
+    xMax1 = xMin1 + rect1[2]
+    yMax1 = yMin1 + rect1[3]
+    
+    xMin2 = rect2[0]
+    yMin2 = rect2[1]
+    xMax2 = xMin2 + rect2[2]
+    yMax2 = yMin2 + rect2[3]
+    
+    xMin, yMin, xMax, yMax = (max(xMin1, xMin2), max(yMin1, yMin2),
+                              min(xMax1, xMax2), min(yMax1, yMax2))
+    if xMin >= xMax or yMin >= yMax:
+        return False
+    return True
+
 
 
 class HPGLPen(BasePen):
@@ -322,6 +341,15 @@ class HPGLContext(BaseContext):
         return seq
     
     
+    def _get_transformed_pt(self, (x, y)):
+        if self._state.transformMatrix is not None:
+            (x, y) = self._state.transformMatrix.transformPoint((x, y))
+        if self._rounding:
+            return (int(round(x)), int(round(y)))
+        else:
+            return (x, y)
+    
+    
     # Context-specific stuff
     
     def _reset(self):
@@ -346,9 +374,17 @@ class HPGLContext(BaseContext):
         if DEBUG:
             print "HPGLContext._drawPath()"
         if self._state.path:
-            hp = HPGLPen(self._state, self._rounding)
-            self._state.path.drawToPen(hp)
-            self._hpglData.write(hp.hpgl)
+            x, y, w, h = self._state.path.bounds()
+            x, y = self._get_transformed_pt((x, y))
+            w, h = self._get_transformed_pt((w, h))
+            if rects_intersect((0, 0, self.width, self.height), (x, y, w, h)):
+                print self._scale
+                hp = HPGLPen(self._state, self._rounding, self._scale)
+                self._state.path.drawToPen(hp)
+                self._hpglData.write(hp.hpgl)
+            else:
+                if DEBUG:
+                    print "    Path outside drawing area: (%0.2f, %0.2f, %0.2f, %0.2f)" % (x, y, w, h)
     
     
     def _clipPath(self):
