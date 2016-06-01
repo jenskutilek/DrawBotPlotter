@@ -14,7 +14,8 @@ def addHPGLContext():
         import drawBot.context
         reload(drawBot.context)
     from drawBot.context import allContexts
-    #print allContexts
+    #if DEBUG:
+    #    print allContexts
     allContexts.append(HPGLContext)
 
 
@@ -182,11 +183,13 @@ class HPGLFile(object):
         self._hpgldata = []
 
     def write(self, value):
-        print "    HPGLFile.write()", value
+        if DEBUG:
+            print "    HPGLFile.write()", value
         self._hpgldata.extend(value)
 
     def writeToFile(self, path):
-        print "HPGLFile.writeToFile()", path
+        if DEBUG:
+            print "HPGLFile.writeToFile()", path
         data = self.read()
         f = open(path, "w")
         f.write(data)
@@ -246,7 +249,8 @@ class HPGLContext(BaseContext):
     
         
     def __init__(self):
-        print "HPGLContext.__init__()"
+        if DEBUG:
+            print "HPGLContext.__init__()"
         super(HPGLContext, self).__init__()
         self._pages = []
         self._hpgl_base_unit = 1/1016 # inch
@@ -327,7 +331,8 @@ class HPGLContext(BaseContext):
     
     
     def _newPage(self, width, height):
-        print "HPGLContext._newPage()"
+        if DEBUG:
+            print "HPGLContext._newPage()"
         if hasattr(self, "_hpglData"):
             self._hpglData.write(self._get_end_sequence())
             self._pages.append(self._hpglData)
@@ -338,7 +343,8 @@ class HPGLContext(BaseContext):
     
     
     def _drawPath(self):
-        print "HPGLContext._drawPath()"
+        if DEBUG:
+            print "HPGLContext._drawPath()"
         if self._state.path:
             hp = HPGLPen(self._state, self._rounding)
             self._state.path.drawToPen(hp)
@@ -352,7 +358,8 @@ class HPGLContext(BaseContext):
     
     
     def _saveImage(self, path, multipage):
-        print "HPGLContext._saveImage()"
+        if DEBUG:
+            print "HPGLContext._saveImage()"
         if multipage is None:
             multipage = False
         self._hpglData.write(self._get_end_sequence())
@@ -360,7 +367,8 @@ class HPGLContext(BaseContext):
         fileName, fileExt = os.path.splitext(path)
         firstPage = 0
         pageCount = len(self._pages)
-        print "    Pages:", pageCount
+        if DEBUG:
+            print "    Pages:", pageCount
         pathAdd = "_1"
         if not multipage:
             firstPage = pageCount - 1
