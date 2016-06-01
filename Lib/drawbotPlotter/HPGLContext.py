@@ -70,15 +70,22 @@ def rects_intersect(rect1, rect2):
 
 class HPGLPen(BasePen):
     
-    def __init__(self, state=None, rounding=False):
+    def __init__(self, state=None, rounding=False, scale=1):
         BasePen.__init__(self, glyphSet=None)
         self._state = state
         self._rounding = rounding
+        self._scale = scale
         self._hpgl = []
         self._prev_segment = None
         self._select_pen()
-        
-        self.approximateSegmentLength = 10
+        self.approximateSegmentLength = 80 / self._scale
+        if self._state.transformMatrix is not None:
+            print "*** Transform", self._state.transformMatrix[0], self._state.transformMatrix[3]
+            self.approximateSegmentLength *= max(
+                self._state.transformMatrix[0],
+                self._state.transformMatrix[3],
+            )
+        print "Segment Length:", self.approximateSegmentLength
         self.currentPt = None
     
     def _select_pen(self):
@@ -303,6 +310,11 @@ class HPGLContext(BaseContext):
         # SC = Scale xmin, ymin, xmax, ymax
         self.sc_x_max = self.width  * self._safety_margin
         self.sc_y_max = self.height * self._safety_margin
+        
+        self._scale = self.ip_x2 / self.sc_x_max
+        
+        if DEBUG:
+            print "Global scale:", self._scale
     
     
     def _get_init_sequence(self):
