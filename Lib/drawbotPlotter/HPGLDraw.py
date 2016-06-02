@@ -47,6 +47,7 @@ class HPGLDraw(object):
                 strokeWidth(1)
                 stroke(0)
                 restore()
+                scale(72/1016)
             elif c == "PU":
                 if self.debug:
                     print c, p
