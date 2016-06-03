@@ -4,14 +4,16 @@ import sys
 sys.path.append("/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7")
 import chiplotle
 from defcon import Font
+from compositor import Font as FeatureFont
 from drawBot.drawBotDrawingTools import _drawBotDrawingTool
 from fontTools.pens.cocoaPen import CocoaPen
-from drawBot.drawBotDrawingTools import _drawBotDrawingTool
 import subprocess
 from os.path import expanduser
 import os
 from time import mktime, gmtime
 from vanilla import *
+from drawbotPlotter.HPGLContext import addHPGLContext
+from drawbotPlotter.HPGLDraw import HPGLDraw
 from drawBot.context import allContexts
 
 addHPGLContext()
@@ -29,66 +31,15 @@ def now():
    return mktime(gmtime()) 
 
 
-from re import compile, search
 
-class jkKernInfo(object):
-    
-    def __init__(self, font):
-        self.font = font
-        self.group_name_pattern = compile("^@MMK_*")
-        self.group_name_l_pattern = compile("^@MMK_L_*")
-        self.group_name_r_pattern = compile("^@MMK_R_*")
-        self._analyze_kerning()
-    
-    def is_kerning_group(self, name, side=None):
-        # Test if supplied name is a kerning group name
-        if side is None:
-            return self.group_name_pattern.search(name)
-        elif side == "l":
-            return self.group_name_l_pattern.search(name)
-        elif side == "r":
-            return self.group_name_r_pattern.search(name)
+class SimpleGlyphRecord(object):
+    def __init__(self, glyphName, xPlacement=0, yPlacement=0, xAdvance=0, yAdvance=0):
+        self.glyphName = glyphName
+        self.xPlacement = xPlacement
+        self.yPlacement = yPlacement
+        self.xAdvance = xAdvance
+        self.yAdvance = yAdvance
 
-        return False
-
-    
-    def _analyze_kerning(self):
-        self.group_info = {
-            "l": {},
-            "r": {},
-        }
-        if self.font is not None:
-            self.kerning = self.font.kerning
-            for group_name, group_content in self.font.groups.items():
-                if self.is_kerning_group(group_name, "l"):
-                    for glyph_name in group_content:
-                        self.group_info["l"][glyph_name] = group_name
-                if self.is_kerning_group(group_name, "r"):
-                    for glyph_name in group_content:
-                        self.group_info["r"][glyph_name] = group_name
-    
-    def get_group_for_glyph(self, glyph_name, side):
-        group_name = self.group_info[side].get(glyph_name, None)
-        return group_name
-    
-    def getKernValue(self, left, right):
-        left_group = self.get_group_for_glyph(left, "l")
-        right_group = self.get_group_for_glyph(right, "r")
-        if self.font is None:
-            return 0
-        pair_value = self.kerning.get((left, right), None)
-        if pair_value is not None:
-            return pair_value
-        lg_value = self.kerning.get((left_group, right), None)
-        if lg_value is not None:
-            return lg_value
-        rg_value = self.kerning.get((left, right_group), None)
-        if rg_value is not None:
-            return rg_value
-        group_value = self.kerning.get((left_group, right_group), None)
-        if group_value is None:
-            group_value = 0
-        return group_value
 
 
 def drawGlyph(glyph):
@@ -122,10 +73,30 @@ pp_sizes = {
 
 # Font Choice
 fonts_list = {
-    0: Font (expanduser("~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Mark_CenterLine_03.ufo")),
-    1: Font (expanduser("~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/HertzTypewriterLine-Light.ufo")),
-    2: Font (expanduser("~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_outline_01.ufo")),
-    3: Font (expanduser("~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/manVSmachine7.ufo")),    
+    0:  (
+            "~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Mark_CenterLine_03.ufo",
+            None,
+        ),
+    1:  (
+            "~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/HertzTypewriterLine-Light.ufo",
+            None,
+        ),
+    2:  (
+            "~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_outline_01.ufo",
+            None,
+        ),
+    3:  (
+            "~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/manVSmachine7.ufo",
+            None,
+        ),
+    4:  (
+            "~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/LiebeLotte-Centerline.ufo",
+            "~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/LiebeLotte-Centerline.otf",
+        ),
+    5:  (
+            "~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/ComicJens-Hairline.ufo",
+            "~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/ComicJens-Hairline.otf",
+        ),
    }
 
 def getGlyphNamesFromString(my_string):
@@ -154,15 +125,6 @@ class FontProofer(object):
         self.font_index = font_index
         self.set_font(font)    
         
-        #for 2000 UPM Fonts
-        if font_index == 0:
-            self.upm = 2000
-            self.desc = -500
-            self.x_height = 1000
-            self.cap_height = 1400
-            self.asc = 1500
-            self.angle = 0
-            
         self.mark_fill = False
         self.mark_composites = False
         
@@ -210,9 +172,24 @@ class FontProofer(object):
     
     
     def set_font(self, font=None):
-        self.font = font
+        
+        # open UFO with defcon
+        if font is not None:
+            font_path = expanduser(font[0])
+            self.font = Font(font_path)
+        
+            # open OTF with compositor
+            if font[1] is None:
+                shaping_font_path = None
+                self.shaping_font = None
+            else:
+                shaping_font_path = expanduser(font[1])
+                self.shaping_font = FeatureFont(shaping_font_path)
+        else:
+            self.font = None
+            self.shaping_font = None
+        
         if self.font is not None:
-            self.kerning = jkKernInfo(self.font)
             self.upm = self.font.info.unitsPerEm
             self.desc = self.font.info.descender
             self.x_height = self.font.info.xHeight
@@ -221,7 +198,6 @@ class FontProofer(object):
             self.angle = self.font.info.italicAngle
         
         else:
-            self.kerning = jkKernInfo(self.font)
             self.upm = 1000
             self.desc = -250
             self.x_height = 500
@@ -235,7 +211,7 @@ class FontProofer(object):
     
     def _drawGlyph(self, glyph):
         save()
-        scale(self.scale)
+        #scale(self.scale)
         
         fill(None)
         lineJoin("round")
@@ -256,121 +232,88 @@ class FontProofer(object):
             restore()
         restore()
     
-    def _drawMetrics(self, glyph):
-        save()
-        stroke(0.7)
-        w = glyph.width
-        if self.mark_fill:
-            if glyph.mark is not None:
-                save()
-                fill(glyph.mark[0], glyph.mark[1], glyph.mark[2], 0.5)
-                rect(0, self.desc, w, abs(self.desc) + self.asc)
-                restore()
-        
-        line((0, self.desc), (0, self.asc))
-        if w != 0:
-            line((0, self.desc), (w, 0 + self.desc))
-            line((0, 0), (w, 0))
-            line((0, self.x_height), (w, 0 + self.x_height))
-            line((0, self.cap_height), (w, 0 + self.cap_height))
-            line((0, self.asc), (w, 0 + self.asc))
-            line((w, self.desc), (w, self.asc))
-
-        restore()
-        
-    
-    def getGlyphnameList(self, my_text):
-        
-        return [ord(n) for n in my_text]
-        
-    def getTextWidth(self, my_text):
-        lines = my_text.splitlines()
-        maxWidth = 0
-        self.linelength = []
-        
-        for line in lines:
-            LineWidth = self.getLineWidth(line.strip())
-            self.linelength.append(LineWidth) 
-        
-            if LineWidth > maxWidth:
-                maxWidth = LineWidth
-        
-        count = 0
-        for linelength in self.linelength:
-            print "Line %s is %s ✕ line %s" %(self.linelength.index(linelength)+1,  round(maxWidth/linelength,2), self.linelength.index(maxWidth)+1) 
-        print ""
-        return maxWidth 
-            
-        
-    def getLineWidth(self, my_text):
-        totalwidth = 0
-        my_list = getGlyphNamesFromString(my_text)
-        for i, gn in enumerate(my_list):
-            if not gn in self.font:
-                print "Missing glyph:", gn
-            else:
-                glyph = self.font[gn]
-                xadv = glyph.width
-                if i < len(my_list)-1:
-                    totalwidth += xadv + self.kerning.getKernValue(gn,my_list[i+1])
-                else:
-                    totalwidth += xadv
-        return totalwidth    
-            
     def setText(self, my_text):
-        lines = my_text.splitlines()
-        my_list = getGlyphNamesFromString(my_text)        
+        my_list = getGlyphNamesFromString(my_text+"\n")
         
         if self.font is None:
             print "Pick a font"
             return None
-            
-        self.getTextWidth(my_text)
-        self.scale = self.breite / self.linelength[0]
-        self.opticalSize()        
-        self.new_page()
-        pagebreak = True
+        
+        if self.shaping_font is None:
+            glyphRecords = [SimpleGlyphRecord(n) for n in my_list]
+        else:
+            for tag, state in [
+                ("calt", True),
+                ("liga", True),
+                ("kern", True),
+            ]:
+                self.shaping_font.gpos.setFeatureState(tag, state)
+            for tag, state in [
+                ("calt", True),
+                ("liga", True),
+            ]:
+                self.shaping_font.gsub.setFeatureState(tag, state)
+            glyphRecords = self.shaping_font.process(
+                my_list,
+                script="DFLT",
+                langSys="DEU",
+                rightToLeft=False,
+                case="unchanged",
+            )
+        
+        # Measure lines, draw line when a \n character occurs.
+        
+        line_width = 0
+        line_width_prev = 0
+        lineGlyphRecords = []
+        first_line = True
+        
+        for gr in glyphRecords:
+            if gr.glyphName != r"\n":
+                glyphname = gr.glyphName
+                try:
+                    glyph = self.font[glyphname]
+                except KeyError:
+                    print "Ignored missing glyph:", glyphname
+                    glyph = None
+                if glyph is not None:
+                    line_width += glyph.width + gr.xAdvance
+                    lineGlyphRecords.append(gr)
+            else:
+                #print [gr.glyphName for gr in lineGlyphRecords]
+                #print "Line width:", line_width
+                self.scale = self.breite / line_width
+                #print "Scale:", self.scale
+                if first_line:
+                    self.new_page()
+                    first_line = False
+                else:
+                    #print "Translate"
+                    translate(0, -self.upm * self.scale  )
+                    #rect(0, 0, 10, 10)
+                self.opticalSize()
+                save()
+                scale(self.scale)
+                #fill(None)
+                #stroke(1,0,0)
+                #rect(0, 10, line_width, self.asc-10)
+                #rect(0, self.desc, line_width, -self.desc-10)
+                for gr in lineGlyphRecords:
+                    glyphname = gr.glyphName
+                    glyph = self.font[glyphname]
+                    save()
+                    translate(gr.xPlacement, gr.yPlacement)
+                    self._drawGlyph(glyph)
+                    restore()
+                    translate(glyph.width + gr.xAdvance, gr.yAdvance)
+                line_width = 0
+                lineGlyphRecords = []
+                restore()
+                
+        
 
         
-        x=0
-        y=0
-        linebreak = 0
         
-        for i,gn in enumerate(my_list):
-                        
-            if gn == r"\n":
-                linebreak += 1
-                self.scale = self.breite / self.linelength[linebreak]
-                self.opticalSize() 
-                yadv = self.upm * self.scale + self.y_pad
-                y += yadv
-                translate(-x, -yadv * self.linespace)
-                x = 0 #+ xadv
-            elif not gn in self.font:
-                print "Missing glyph:", gn
-            else:
-                glyph = self.font[gn]
-                if i < len(my_list)-1:
-                    xadv = (glyph.width + self.kerning.getKernValue(gn,my_list[i+1])) * self.scale
-                    
-                    #print Kerning pairs
-                    #if not self.kerning.getKernValue(gn,my_list[i+1]) == 0:
-                    #    print "Kerned:", gn, my_list[i+1], self.kerning.getKernValue(gn,my_list[i+1])
-                    
-                else:
-                    xadv = glyph.width * self.scale
-               
-                if (x + xadv) > self.width - self.margins["left"] - 0.9*self.margins["right"]:
-                    yadv = self.upm * self.scale + self.y_pad
-                    y += yadv
-                    translate(-x, -yadv)
-                    self._drawGlyph(glyph) 
-                    x = 0 + xadv
-                
-                else:
-                    self._drawGlyph(glyph)
-                    x += xadv
-                translate(xadv, 0)
         if self.send_to_plotter:
             saveImage(expanduser("~/Documents/Penplotter_Cards/Postcard_%s_%d.pdf") % (Line_1, now()))
             print "PDF saved to /Documents/Penplotter_Cards/Postcard_%s_%d.pdf" % (Line_1, now())
@@ -380,16 +323,16 @@ class FontProofer(object):
                     
     def opticalSize(self):
         fontsize_list = {
-        0 :Font(expanduser("~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_Centerline.ufo")),
-        4: Font (expanduser("~//Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_fourlines_01.ufo")),
-        2: Font (expanduser("~//Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_oneline_01.ufo")),
-        1: Font (expanduser("~//Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_Outline_01.ufo")),
-        3: Font (expanduser("~//Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_twoline_01.ufo")),
-        #5: Font (expanduser("~//Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/petrosian_04.ufo"),
+        0: ("~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_Centerline.ufo", None),
+        4: ("~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_fourlines_01.ufo", None),
+        2: ("~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_oneline_01.ufo", None),
+        1: ("~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_Outline_01.ufo", None),
+        3: ("~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_twoline_01.ufo", None),
+        #5: ("~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/petrosian_04.ufo", None),
         }
         
         if self.font_index == 2: 
-            self.font = fontsize_list[ min( 4, int(self.scale/0.069) ) ] 
+            self.set_font(fontsize_list[ min( 4, int(self.scale/0.069) ) ] )
                      
                 
 if __name__ == '__main__':
@@ -419,7 +362,7 @@ if __name__ == '__main__':
         
         dict(name="Fonts", ui="RadioGroup",
             args=dict( 
-                titles=["FF Mark", "FF Hertz Mono", "Bronco", "Broadnib"],
+                titles=["FF Mark", "FF Hertz Mono", "Bronco", "Broadnib", "LiebeLotte", "Comic Jens"],
                 isVertical=True,
             )
         ),
