@@ -82,11 +82,11 @@ fonts_list = {
         ),
     2:  (
             "~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_outline_01.ufo",
-            None,
+            "~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_black_01_.otf",
         ),
     3:  (
-            "~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/manVSmachine7.ufo",
-            None,
+            "~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/manVSmachine8.ufo",
+            "~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/manVSmachine8.otf",
         ),
     4:  (
             "~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/LiebeLotte-Centerline.ufo",
@@ -95,6 +95,10 @@ fonts_list = {
     5:  (
             "~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/ComicJens-Hairline.ufo",
             "~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/ComicJens-Hairline.otf",
+        ),
+    6:  (
+            "~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Zahnrad.ufo",
+            None,
         ),
    }
 
@@ -156,7 +160,7 @@ class FontProofer(object):
             "right": marginsside,
         
         }
-        self.breite = self.width - marginsside * 1.5
+        self.breite = self.width - marginsside * 2
         self.scale = 1 
         
         self.nib_simulate = nib_simulate
@@ -327,11 +331,11 @@ class FontProofer(object):
                     
     def opticalSize(self):
         fontsize_list = {
-        0: ("~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_Centerline.ufo", None),
-        4: ("~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_fourlines_01.ufo", None),
-        2: ("~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_oneline_01.ufo", None),
-        1: ("~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_Outline_01.ufo", None),
-        3: ("~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_twoline_01.ufo", None),
+        0: ("~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_Centerline.ufo", "~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_black_01_.otf"),
+        4: ("~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_fourlines_01.ufo", "~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_black_01_.otf"),
+        2: ("~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_oneline_01.ufo", "~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_black_01_.otf"),
+        1: ("~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_Outline_01.ufo", "~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_black_01_.otf"),
+        3: ("~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_twoline_01.ufo", "~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/Bronco_black_01_.otf"),
         #5: ("~/Documents/Schriften/_MeineSchriften/PenPlotterFaces/DrawbotSketches/fonts/petrosian_04.ufo", None),
         }
         
@@ -366,7 +370,7 @@ if __name__ == '__main__':
         
         dict(name="Fonts", ui="RadioGroup",
             args=dict( 
-                titles=["FF Mark", "FF Hertz Mono", "Bronco", "Broadnib", "LiebeLotte", "Comic Jens"],
+                titles=["FF Mark", "FF Hertz Mono", "Bronco", "Broadnib", "LiebeLotte", "Comic Jens", "Zahnrad"],
                 isVertical=True,
             )
         ),
