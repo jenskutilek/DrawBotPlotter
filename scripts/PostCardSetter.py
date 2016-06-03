@@ -12,6 +12,14 @@ from os.path import expanduser
 import os
 from time import mktime, gmtime
 from vanilla import *
+from drawbotPlotter.HPGLContext import addHPGLContext
+from drawbotPlotter.HPGLDraw import HPGLDraw
+
+addHPGLContext()
+
+
+DEBUG = True
+
 
 def now(): 
    return mktime(gmtime()) 
@@ -87,22 +95,18 @@ def drawGlyph(glyph):
 
 _drawBotDrawingTool.drawGlyph = drawGlyph
 
-def plot(pdf_path):
+def plot(hpgl_path):
     #Drawing limits: (left 0; bottom 0; right 16158; top 11040)
     #format = 'hpgl'
     format = 'plot-hpgl'
-    abs_path = expanduser(pdf_path)
+    abs_path = expanduser(hpgl_path)
     saveImage(abs_path)
-    p = subprocess.call(
-        ['/usr/local/bin/pstoedit', '-f', format, abs_path, abs_path+'.hpgl']
-    )
-    if p != 0:
-        print "pstoedit error: returncode", p
-        print err
+    # Send to plotter
+    if DEBUG:
+        HPGLDraw(abs_path, width(), height())
     else:
-        # Send to plotter
         plotter = chiplotle.instantiate_plotters( )[0]
-        plotter.write_file(abs_path+'.hpgl')
+        plotter.write_file(abs_path)
 
 # Parallel pen sizes in pt
 pp_sizes = {
@@ -362,7 +366,8 @@ class FontProofer(object):
             saveImage(expanduser("~/Documents/Penplotter_Cards/Postcard_%s_%d.pdf") % (Line_1, now()))
             print "PDF saved to /Documents/Penplotter_Cards/Postcard_%s_%d.pdf" % (Line_1, now())
             print "Plotting..."
-            plot("~/Desktop/temp.pdf")
+            plot("~/Desktop/temp.hpgl")
+            
                     
     def opticalSize(self):
         fontsize_list = {
