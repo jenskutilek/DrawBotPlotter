@@ -147,9 +147,10 @@ class FontProofer(object):
         print "Picked Font"
         print self.font
     
-    def __init__(self, font=None, font_index=0, caps_lock=False, linespace=0.7, marginsupdown = 20, marginsside = 20, nib_simulate=False, nib_width_index=0, nib_angle=30, Color_Nib=False, send_to_plotter=False):       
+    def __init__(self, font=None, format_index=0, font_index=0, caps_lock=False, linespace=0.7, marginsupdown = 20, marginsside = 20, nib_simulate=False, nib_width_index=0, nib_angle=30, Color_Nib=False, send_to_plotter=False):       
         
         self.linespace = linespace
+        self.format_index = format_index
         self.font_index = font_index
         self.set_font(font)    
         
@@ -169,6 +170,10 @@ class FontProofer(object):
         hpglscale = 1.3752
         self.width = 842/2 *hpglscale
         self.height = 595/2 *hpglscale
+        if format_index == 1:
+            self.width = 595/2 *hpglscale
+            self.height = 842/2 *hpglscale
+        
         
         self.margins = {
             "top": marginsupdown,
@@ -177,7 +182,7 @@ class FontProofer(object):
             "right": marginsside,
         
         }
-        self.breite = 842/2 *hpglscale - marginsside * 1.5*hpglscale
+        self.breite = self.width - marginsside * 1.5*hpglscale
         self.scale = 1 
         
         self.nib_simulate = nib_simulate
@@ -405,10 +410,15 @@ if __name__ == '__main__':
             args=dict({"continuous":False},text="to the same width."),
         ),
         
+        dict(name="Format", ui="RadioGroup",
+            args=dict( 
+                titles=["Landscape", "Portrait"],
+                isVertical=True,
+            )
+        ),
         
         dict(name="Fonts", ui="RadioGroup",
             args=dict( 
-                #posSize=(10, 10, -10, 40),
                 titles=["FF Mark", "FF Hertz Mono", "Bronco", "Broadnib"],
                 isVertical=True,
             )
@@ -470,6 +480,7 @@ if __name__ == '__main__':
     print "FONTS\n-----\n", "1: FF Mark\n", "2: FF Hertz Mono\n", "3: Bronco\n", "4: Broadnib\n"
     
     fp = FontProofer(
+        format_index=Format,
         font_index=Fonts,
         linespace=Leading,
         marginsupdown=Move_vertical,
