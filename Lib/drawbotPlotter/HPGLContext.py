@@ -7,15 +7,13 @@ from fontTools.pens.basePen import BasePen
 from robofab.pens.filterPen import _estimateCubicCurveLength, _getCubicPoint
 
 
-DEBUG = True
+DEBUG = False
 
 def addHPGLContext():
     if DEBUG:
         import drawBot.context
         reload(drawBot.context)
     from drawBot.context import allContexts
-    #if DEBUG:
-    #    print allContexts
     allContexts.append(HPGLContext)
 
 
@@ -70,7 +68,7 @@ def rects_intersect(rect1, rect2):
 
 class HPGLPen(BasePen):
     
-    def __init__(self, state=None, rounding=False, scale=1):
+    def __init__(self, state=None, rounding=False, scale=1, min_segment_units=20, max_curve_steps=50):
         BasePen.__init__(self, glyphSet=None)
         self._state = state
         self._rounding = rounding
@@ -78,16 +76,8 @@ class HPGLPen(BasePen):
         self._hpgl = []
         self._prev_segment = None
         self._select_pen()
-        self.min_segment_units = 20
-        self.max_curve_steps = 50
-        #self.approximateSegmentLength = 400 / self._scale
-        #if self._state.transformMatrix is not None:
-        #    print "*** Transform", self._state.transformMatrix[0], self._state.transformMatrix[3]
-        #    self.approximateSegmentLength /= max(
-        #        self._state.transformMatrix[0],
-        #        self._state.transformMatrix[3],
-        #    )
-        #print "Segment Length:", self.approximateSegmentLength
+        self.min_segment_units = min_segment_units
+        self.max_curve_steps = max_curve_steps
         self.currentPt = None
     
     def _select_pen(self):
@@ -218,8 +208,8 @@ class HPGLFile(object):
         self._hpgldata = []
 
     def write(self, value):
-        #if DEBUG:
-        #    print "    HPGLFile.write()", value
+        if DEBUG:
+            print "    HPGLFile.write()", value
         self._hpgldata.extend(value)
 
     def writeToFile(self, path):
@@ -290,6 +280,8 @@ class HPGLContext(BaseContext):
         self._pages = []
         self._hpgl_base_unit = 1/1016 # inch
         self._safety_margin = 0.9 # printable area percentage
+        self.min_segment_units = 20
+        self.max_curve_steps = 50
         self._rounding = True
         
     
@@ -400,8 +392,7 @@ class HPGLContext(BaseContext):
             x, y = self._get_transformed_pt((x, y))
             w, h = self._get_transformed_pt((w, h))
             if rects_intersect((0, 0, self.width, self.height), (x, y, w, h)):
-                #print self._scale
-                hp = HPGLPen(self._state, self._rounding, self._scale)
+                hp = HPGLPen(self._state, self._rounding, self._scale, self.min_segment_units, self.max_curve_steps)
                 self._state.path.drawToPen(hp)
                 self._hpglData.write(hp.hpgl)
             else:
