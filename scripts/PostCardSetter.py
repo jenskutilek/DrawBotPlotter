@@ -12,10 +12,14 @@ from os.path import expanduser
 import os
 from time import mktime, gmtime
 from vanilla import *
-from drawbotPlotter.HPGLContext import addHPGLContext
-from drawbotPlotter.HPGLDraw import HPGLDraw
+from drawBot.context import allContexts
 
 addHPGLContext()
+
+# Set min/max curve splitting values in HPGL context
+hc = allContexts[-1]
+hc.min_segment_units = 20
+hc.max_curve_steps = 50
 
 
 DEBUG = True
