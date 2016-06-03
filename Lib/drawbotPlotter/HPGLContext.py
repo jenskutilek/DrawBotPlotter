@@ -332,6 +332,7 @@ class HPGLContext(BaseContext):
             "PU;",   # PU = Pen Up
             #"SP1;",  # SP1 = Select Pen 1
             "LT;",   # LT = Line Type solid
+            "IW%i,%i,%i,%i;" % (0, 0, self.ip_x2, self.ip_y2),
             "\n",
         ]
         
