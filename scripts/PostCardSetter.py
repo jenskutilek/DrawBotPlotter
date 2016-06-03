@@ -263,8 +263,14 @@ class FontProofer(object):
             glyphRecords = [SimpleGlyphRecord(n) for n in my_list]
         else:
             for tag, state in self.features:
-                self.shaping_font.gpos.setFeatureState(tag, state)
-                self.shaping_font.gsub.setFeatureState(tag, state)
+                try:
+                    self.shaping_font.gpos.setFeatureState(tag, state)
+                except:
+                    pass
+                try:
+                    self.shaping_font.gsub.setFeatureState(tag, state)
+                except:
+                    pass
             glyphRecords = self.shaping_font.process(
                 my_list,
                 script="DFLT",
@@ -444,8 +450,12 @@ if __name__ == '__main__':
         features.append(("cswh", True))
     if Initials:
         features.append(("init", True))
+    else:
+        features.append(("init", False))
     if Finals:
         features.append(("fina", True))
+    else:
+        features.append(("fina", False))
     
     fp = FontProofer(
         format_index=Format,
