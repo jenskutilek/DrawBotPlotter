@@ -78,14 +78,16 @@ class HPGLPen(BasePen):
         self._hpgl = []
         self._prev_segment = None
         self._select_pen()
-        self.approximateSegmentLength = 80 / self._scale
-        if self._state.transformMatrix is not None:
-            print "*** Transform", self._state.transformMatrix[0], self._state.transformMatrix[3]
-            self.approximateSegmentLength *= max(
-                self._state.transformMatrix[0],
-                self._state.transformMatrix[3],
-            )
-        print "Segment Length:", self.approximateSegmentLength
+        self.min_segment_units = 20
+        self.max_curve_steps = 50
+        #self.approximateSegmentLength = 400 / self._scale
+        #if self._state.transformMatrix is not None:
+        #    print "*** Transform", self._state.transformMatrix[0], self._state.transformMatrix[3]
+        #    self.approximateSegmentLength /= max(
+        #        self._state.transformMatrix[0],
+        #        self._state.transformMatrix[3],
+        #    )
+        #print "Segment Length:", self.approximateSegmentLength
         self.currentPt = None
     
     def _select_pen(self):
@@ -106,9 +108,9 @@ class HPGLPen(BasePen):
         if self._state.transformMatrix is not None:
             (x, y) = self._state.transformMatrix.transformPoint((x, y))
         if self._rounding:
-            return (int(round(x)), int(round(y)))
+            return (int(round(x * self._scale)), int(round(y * self._scale)))
         else:
-            return (x, y)
+            return (x * self._scale, y * self._scale)
     
     def _get_transformed_pts(self, *pts):
         return [self._get_transformed_pt(pt) for pt in pts]
@@ -126,9 +128,9 @@ class HPGLPen(BasePen):
     def _lineTo(self, pt):
         self.currentPt = pt
         if self._prev_segment not in ["line", "curve"]:
-            self._hpgl.append(";PD")
+            self._hpgl.append("; PD ")
         else:
-            self._hpgl.append(",")
+            self._hpgl.append(", ")
         pt = self._get_transformed_pt(pt)
         self._hpgl.append("%s,%s" % formatPoint(pt, self._rounding))
         self._prev_segment = "line"
@@ -139,15 +141,22 @@ class HPGLPen(BasePen):
         
         # Shamelessly lifted from robofab.pens.filterPen.FlattenPen
         
-        est = _estimateCubicCurveLength(self.currentPt, bcp1, bcp2, pt)/self.approximateSegmentLength
-        maxSteps = int(round(est))
+        est = _estimateCubicCurveLength(self.currentPt, bcp1, bcp2, pt)
+        if DEBUG:
+            print "    * Curve Length:", int(round(est))
+        seg_length = self._scale * est / self.max_curve_steps
+        if seg_length < self.min_segment_units:
+            self.max_curve_steps = int(round(self._scale * est / self.min_segment_units))
+            if DEBUG:
+                print "    * Segment length below minimum, changing # steps to", self.max_curve_steps
         falseCurve = (bcp1==self.currentPt) and (bcp2==pt)
-        if maxSteps < 1 or falseCurve:
+        if self.max_curve_steps < 1 or falseCurve:
             self.lineTo(pt)
+            self.currentPt = orig_pt
             self._prev_segment = "line"
             return
-        step = 1.0/maxSteps
-        factors = range(0, maxSteps+1)
+        step = 1.0/self.max_curve_steps
+        factors = range(0, self.max_curve_steps+1)
         for i in factors[1:]:
             p = _getCubicPoint(i*step, orig, bcp1, bcp2, pt)
             self.lineTo(p)
@@ -209,8 +218,8 @@ class HPGLFile(object):
         self._hpgldata = []
 
     def write(self, value):
-        if DEBUG:
-            print "    HPGLFile.write()", value
+        #if DEBUG:
+        #    print "    HPGLFile.write()", value
         self._hpgldata.extend(value)
 
     def writeToFile(self, path):
@@ -323,9 +332,10 @@ class HPGLContext(BaseContext):
             # IN = Initialize
             "IN;",              
             # IP = Scaling Point x1, y1, x2, y2
-            "IP%s,%s,%s,%s;" % (0, 0, self.ip_x2, self.ip_y2),
+            #"IP%s,%s,%s,%s;" % (0, 0, self.ip_x2, self.ip_y2),
             # SC = Scale 
-            "SC%s,%s,%s,%s;" % (0, 0, self.sc_x_max, self.sc_y_max),
+            #"SC%s,%s,%s,%s;" % (0, 0, self.sc_x_max, self.sc_y_max),
+            "SC;",
             # the rest of the init sequence
             "PU;",   # PU = Pen Up
             #"SP1;",  # SP1 = Select Pen 1
@@ -334,7 +344,7 @@ class HPGLContext(BaseContext):
         ]
         
         # After the scaling is set, coordinates must be floats
-        self._rounding = False
+        #self._rounding = False
         
         return seq
     
@@ -344,9 +354,9 @@ class HPGLContext(BaseContext):
             #"PU;",    # PU = Pen Up
             "SP;",    # Put down the pen
             # "EC;",  # EC = Perforate paper
-            # "PG1;", # PG = Page Feed
+            "PG1;", # PG = Page Feed
             # "EC1;", # EC = ?
-            "PA0,0;", # Move head to 0, 0
+            #"PA0,0;", # Move head to 0, 0
             #"OE;",    # OE = Output Error
             "\n",
         ]
@@ -390,7 +400,7 @@ class HPGLContext(BaseContext):
             x, y = self._get_transformed_pt((x, y))
             w, h = self._get_transformed_pt((w, h))
             if rects_intersect((0, 0, self.width, self.height), (x, y, w, h)):
-                print self._scale
+                #print self._scale
                 hp = HPGLPen(self._state, self._rounding, self._scale)
                 self._state.path.drawToPen(hp)
                 self._hpglData.write(hp.hpgl)
