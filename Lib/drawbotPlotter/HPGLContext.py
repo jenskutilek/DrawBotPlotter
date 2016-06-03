@@ -398,13 +398,13 @@ class HPGLContext(BaseContext):
             x, y, w, h = self._state.path.bounds()
             x, y = self._get_transformed_pt((x, y))
             w, h = self._get_transformed_pt((w, h))
-            if rects_intersect((0, 0, self.width, self.height), (x, y, w, h)):
-                hp = HPGLPen(self._state, self._rounding, self._scale, self.min_segment_units, self.max_curve_steps)
-                self._state.path.drawToPen(hp)
-                self._hpglData.write(hp.hpgl)
-            else:
-                if DEBUG:
-                    print "    Path outside drawing area: (%0.2f, %0.2f, %0.2f, %0.2f)" % (x, y, w, h)
+            #if rects_intersect((0, 0, self.width, self.height), (x, y, w, h)):
+            hp = HPGLPen(self._state, self._rounding, self._scale, self.min_segment_units, self.max_curve_steps)
+            self._state.path.drawToPen(hp)
+            self._hpglData.write(hp.hpgl)
+            #else:
+            #    if DEBUG:
+            #        print "    Path outside drawing area: (%0.2f, %0.2f, %0.2f, %0.2f)" % (x, y, w, h)
     
     
     def _clipPath(self):
