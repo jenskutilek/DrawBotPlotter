@@ -118,9 +118,9 @@ class HPGLPen(BasePen):
     def _lineTo(self, pt):
         self.currentPt = pt
         if self._prev_segment not in ["line", "curve"]:
-            self._hpgl.append("; PD ")
+            self._hpgl.append(";PD")
         else:
-            self._hpgl.append(", ")
+            self._hpgl.append(",")
         pt = self._get_transformed_pt(pt)
         self._hpgl.append("%s,%s" % formatPoint(pt, self._rounding))
         self._prev_segment = "line"
