@@ -16,12 +16,11 @@ from drawbotPlotter.HPGLContext import addHPGLContext
 from drawbotPlotter.HPGLDraw import HPGLDraw
 from drawBot.context import allContexts
 
-addHPGLContext()
-
 # Set min/max curve splitting values in HPGL context
+addHPGLContext()
 hc = allContexts[-1]
-hc.min_segment_units = 20
-hc.max_curve_steps = 50
+hc.min_segment_units = 60
+hc.max_curve_steps = 10
 
 
 DEBUG = False
