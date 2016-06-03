@@ -280,8 +280,8 @@ class HPGLContext(BaseContext):
         self._pages = []
         self._hpgl_base_unit = 1/1016 # inch
         self._safety_margin = 0.9 # printable area percentage
-        self.min_segment_units = 20
-        self.max_curve_steps = 50
+        self.min_segment_units = 40
+        self.max_curve_steps = 20
         self._rounding = True
         
     
