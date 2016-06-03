@@ -289,7 +289,7 @@ class FontProofer(object):
                     first_line = False
                 else:
                     #print "Translate"
-                    translate(0, -self.upm * self.scale  )
+                    translate(0, -self.upm * self.scale * self.linespace)
                     #rect(0, 0, 10, 10)
                 self.opticalSize()
                 save()
@@ -310,16 +310,12 @@ class FontProofer(object):
                 lineGlyphRecords = []
                 restore()
                 
-        
-
-        
-        
         if self.send_to_plotter:
             saveImage(expanduser("~/Documents/Penplotter_Cards/Postcard_%s_%d.pdf") % (Line_1, now()))
             print "PDF saved to /Documents/Penplotter_Cards/Postcard_%s_%d.pdf" % (Line_1, now())
             print "Plotting..."
             plot("~/Desktop/temp.hpgl")
-            
+    
                     
     def opticalSize(self):
         fontsize_list = {
