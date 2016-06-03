@@ -118,7 +118,21 @@ class FontProofer(object):
         print "Picked Font"
         print self.font
     
-    def __init__(self, font=None, format_index=0, font_index=0, caps_lock=False, linespace=0.7, marginsupdown = 20, marginsside = 20, nib_simulate=False, nib_width_index=0, nib_angle=30, Color_Nib=False, send_to_plotter=False):       
+    def __init__(self,
+            font=None,
+            format_index=0,
+            font_index=0,
+            caps_lock=False,
+            linespace=0.7,
+            marginsupdown = 20,
+            marginsside = 20,
+            nib_simulate=False,
+            nib_width_index=0,
+            nib_angle=30,
+            Color_Nib=False,
+            send_to_plotter=False,
+            features = [], # Use features that are active by default (kern, liga, calt)
+        ):
         
         self.linespace = linespace
         self.format_index = format_index
@@ -148,6 +162,8 @@ class FontProofer(object):
         self.scale = 1 
         
         self.nib_simulate = nib_simulate
+        
+        self.features = features
         
         if nib_width_index in pp_sizes:
             self.nib_width_pt = pp_sizes[nib_width_index]
@@ -242,16 +258,8 @@ class FontProofer(object):
         if self.shaping_font is None:
             glyphRecords = [SimpleGlyphRecord(n) for n in my_list]
         else:
-            for tag, state in [
-                ("calt", True),
-                ("liga", True),
-                ("kern", True),
-            ]:
+            for tag, state in self.features:
                 self.shaping_font.gpos.setFeatureState(tag, state)
-            for tag, state in [
-                ("calt", True),
-                ("liga", True),
-            ]:
                 self.shaping_font.gsub.setFeatureState(tag, state)
             glyphRecords = self.shaping_font.process(
                 my_list,
@@ -362,9 +370,18 @@ if __name__ == '__main__':
                 isVertical=True,
             )
         ),
-         dict(name="All_Caps", ui="CheckBox",
-             args=dict(value=False)
-         ),
+        dict(name="All_Caps", ui="CheckBox",
+            args=dict(value=False)
+        ),
+        dict(name="Swashes", ui="CheckBox",
+            args=dict(value=False)
+        ),
+        dict(name="Initials", ui="CheckBox",
+            args=dict(value=False)
+        ),
+        dict(name="Finals", ui="CheckBox",
+            args=dict(value=False)
+        ),
         dict(name="Leading", ui="Slider",
             args=dict( 
                 {"continuous":False},
@@ -418,6 +435,14 @@ if __name__ == '__main__':
     
     print "FONTS\n-----\n", "1: FF Mark\n", "2: FF Hertz Mono\n", "3: Bronco\n", "4: Broadnib\n"
     
+    features = []
+    if Swashes:
+        features.append(("cswh", True))
+    if Initials:
+        features.append(("init", True))
+    if Finals:
+        features.append(("fina", True))
+    
     fp = FontProofer(
         format_index=Format,
         font_index=Fonts,
@@ -429,6 +454,7 @@ if __name__ == '__main__':
         nib_angle=NibAngle,
         Color_Nib=ColorNib,
         send_to_plotter=SendToPlotter,
+        features=features,
         )
         
     lines = [Line_1,Line_2,Line_3,Line_4, Line_5]
