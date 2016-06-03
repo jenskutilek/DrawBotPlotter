@@ -6,7 +6,7 @@ Simple class to draw an HPGL file in DrawBot.
 
 from drawbotPlotter.HPGLContext import HPGLPenColors
 from drawBot.drawBotDrawingTools import _drawBotDrawingTool
-_drawBotDrawingTool._addToNamespace(globals())
+#_drawBotDrawingTool._addToNamespace(globals())
 
 from os.path import expanduser
 
@@ -39,15 +39,15 @@ class HPGLDraw(object):
         have_path = False
         for c, p in self.commands:
             if c == "IN":
-                newPage(self.width, self.height)
-                fill(None)
-                save()
-                fill(1, 1, 0, 0.1)
-                rect(0, 0, self.width, self.height)
-                strokeWidth(1)
-                stroke(0)
-                restore()
-                scale(72/1016)
+                _drawBotDrawingTool.newPage(self.width, self.height)
+                _drawBotDrawingTool.fill(None)
+                _drawBotDrawingTool.save()
+                _drawBotDrawingTool.fill(1, 1, 0, 0.1)
+                _drawBotDrawingTool.rect(0, 0, self.width, self.height)
+                _drawBotDrawingTool.strokeWidth(1)
+                _drawBotDrawingTool.stroke(0)
+                _drawBotDrawingTool.restore()
+                _drawBotDrawingTool.scale(72/1016)
             elif c == "PU":
                 if self.debug:
                     print c, p
@@ -56,13 +56,13 @@ class HPGLDraw(object):
                         if self.debug:
                             print "    endPath"
                         path.endPath()
-                        drawPath(path)
+                        _drawBotDrawingTool.drawPath(path)
                         have_path = False
                     else:
                         if self.debug:
                             print "    endPath"
                         path.endPath()
-                        drawPath(path)
+                        _drawBotDrawingTool.drawPath(path)
                         if self.debug:
                             print "    moveTo", p[-2], p[-1]
                         path.moveTo((p[-2], p[-1]))
@@ -70,7 +70,7 @@ class HPGLDraw(object):
                     if len(p) > 1:
                         if self.debug:
                             print "    moveTo", p[0], p[1]
-                        path = BezierPath()
+                        path = _drawBotDrawingTool.BezierPath()
                         path.moveTo((p[-2], p[-1]))
                         have_path = True
                     else:
@@ -103,16 +103,16 @@ class HPGLDraw(object):
                     if self.debug:
                         print "    endPath (due to SP)"
                     path.endPath()
-                    drawPath(path)
+                    _drawBotDrawingTool.drawPath(path)
                     have_path = False
                 if len(p) == 1:
                     pen_index = int(p[0])
                     for c, i in HPGLPenColors.items():
                         if i == pen_index:
-                            stroke(*c)
+                            _drawBotDrawingTool.stroke(*c)
                             if self.debug:
                                 print "    stroke", c
                 else:
-                    stroke(None)
+                    _drawBotDrawingTool.stroke(None)
                     if self.debug:
                         print "    stroke", None
