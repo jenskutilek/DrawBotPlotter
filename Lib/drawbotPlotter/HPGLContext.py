@@ -14,7 +14,13 @@ def addHPGLContext():
         import drawBot.context
         reload(drawBot.context)
     from drawBot.context import allContexts
-    allContexts.append(HPGLContext)
+    if not str(allContexts[-1]) == "<class 'drawbotPlotter.HPGLContext.HPGLContext'>":
+        print "Added HPGL Context"
+        allContexts.append(HPGLContext)
+        hc = allContexts[-1]
+        hc.min_segment_units = 60
+        hc.max_curve_steps = 10
+    
 
 
 HPGLPenColors = {
