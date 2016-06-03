@@ -24,7 +24,7 @@ hc.min_segment_units = 20
 hc.max_curve_steps = 50
 
 
-DEBUG = True
+DEBUG = False
 
 
 def now(): 
@@ -65,10 +65,10 @@ def plot(hpgl_path):
 
 # Parallel pen sizes in pt
 pp_sizes = {
-    0: 14.173, # 5.0 mm
-    1: 10.772, # 3.8 mm
-    2: 6.803,  # 2.4 mm
-    3: 4.252,  # 1.5 mm
+    0: 5.0 / 25.4 * 72, # mm in pt 14.173
+    1: 3.8 / 25.4 * 72, # mm in pt 10.772
+    2: 2.4 / 25.4 * 72, # mm in pt  6.803
+    3: 1.5 / 25.4 * 72, # mm in pt  4.252
 }
 
 # Font Choice
@@ -143,12 +143,11 @@ class FontProofer(object):
         self.mark_composites = False
         
         # A6 Format
-        hpglscale = 1.3752
-        self.width = 842/2 *hpglscale
-        self.height = 595/2 *hpglscale
+        self.width = 842/2
+        self.height = 595/2
         if format_index == 1:
-            self.width = 595/2 *hpglscale
-            self.height = 842/2 *hpglscale
+            self.width = 595/2
+            self.height = 842/2
         
         
         self.margins = {
@@ -158,7 +157,7 @@ class FontProofer(object):
             "right": marginsside,
         
         }
-        self.breite = self.width - marginsside * 1.5*hpglscale
+        self.breite = self.width - marginsside * 1.5
         self.scale = 1 
         
         self.nib_simulate = nib_simulate
@@ -168,11 +167,13 @@ class FontProofer(object):
         if nib_width_index in pp_sizes:
             self.nib_width_pt = pp_sizes[nib_width_index]
         else:
-            self.nib_width_pt = 14.173 * hpglscale
-        self.nib_width = self.nib_width_pt / self.scale *hpglscale
+            self.nib_width_pt = 14.173
+        self.nib_width = self.nib_width_pt / self.scale
         
         self.nib_angle = radians(nib_angle)
-                   
+        
+        self.pen_width = 0.7 / 25.4 * 72 # mm in pt
+        
         if font_index in fonts_list:
              print "Selected font: ", font_index + 1
              self.set_font(fonts_list[font_index])
@@ -232,7 +233,7 @@ class FontProofer(object):
         fill(None)
         lineJoin("round")
         miterLimit(1)
-        strokeWidth(1.6/self.scale)
+        strokeWidth(self.pen_width/self.scale)
         stroke(0, 0, 0, 1)
         drawGlyph(glyph)
         if self.nib_simulate:
@@ -323,7 +324,7 @@ class FontProofer(object):
             print "PDF saved to /Documents/Penplotter_Cards/Postcard_%s_%d.pdf" % (Line_1, now())
             print "Plotting..."
             plot("~/Desktop/temp.hpgl")
-    
+
                     
     def opticalSize(self):
         fontsize_list = {
