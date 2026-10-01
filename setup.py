@@ -2,7 +2,8 @@
 
 from distutils.core import setup
 
-setup(name="drawbotPlotter",
+setup(
+    name="drawbotPlotter",
     version="0.1",
     description="Plotter support for DrawBot.",
     author="Jens Kutilek, Bernd Volmer",
@@ -11,5 +12,5 @@ setup(name="drawbotPlotter",
     packages=[
         "drawbotPlotter",
     ],
-    package_dir={"":"Lib"}
+    package_dir={"": "Lib"},
 )

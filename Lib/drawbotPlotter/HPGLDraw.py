@@ -1,15 +1,13 @@
-from __future__ import absolute_import, division
-
 """
 Simple class to draw an HPGL file in DrawBot.
 """
 
-from drawbotPlotter.HPGLContext import HPGLPenColors
-from drawBot.drawBotDrawingTools import _drawBotDrawingTool
-#_drawBotDrawingTool._addToNamespace(globals())
-
+# _drawBotDrawingTool._addToNamespace(globals())
 from os.path import expanduser
 
+from drawBot.drawBotDrawingTools import _drawBotDrawingTool
+
+from drawbotPlotter.HPGLContext import HPGLPenColors
 
 
 class HPGLDraw(object):
@@ -22,9 +20,9 @@ class HPGLDraw(object):
         self.height = height
         self.parse()
         self.draw()
-    
+
     def parse(self):
-        cmd_list = [c.strip() for c in self.data.split(";") if not c.strip() == ""]
+        cmd_list = [c.strip() for c in self.data.split(";") if c.strip() != ""]
         self.commands = []
         for c in cmd_list:
             code = c[:2]
@@ -33,8 +31,7 @@ class HPGLDraw(object):
             else:
                 params = []
             self.commands.append((code, params))
-            
-    
+
     def draw(self):
         have_path = False
         for c, p in self.commands:
@@ -47,46 +44,46 @@ class HPGLDraw(object):
                 _drawBotDrawingTool.strokeWidth(1)
                 _drawBotDrawingTool.stroke(0)
                 _drawBotDrawingTool.restore()
-                _drawBotDrawingTool.scale(72/1016)
+                _drawBotDrawingTool.scale(72 / 1016)
             elif c == "PU":
                 if self.debug:
-                    print c, p
+                    print(c, p)
                 if have_path:
                     if len(p) < 2:
                         if self.debug:
-                            print "    endPath"
+                            print("    endPath")
                         path.endPath()
                         _drawBotDrawingTool.drawPath(path)
                         have_path = False
                     else:
                         if self.debug:
-                            print "    endPath"
+                            print("    endPath")
                         path.endPath()
                         _drawBotDrawingTool.drawPath(path)
                         if self.debug:
-                            print "    moveTo", p[-2], p[-1]
+                            print("    moveTo", p[-2], p[-1])
                         path.moveTo((p[-2], p[-1]))
                 else:
                     if len(p) > 1:
                         if self.debug:
-                            print "    moveTo", p[0], p[1]
+                            print("    moveTo", p[0], p[1])
                         path = _drawBotDrawingTool.BezierPath()
                         path.moveTo((p[-2], p[-1]))
                         have_path = True
                     else:
                         if self.debug:
-                            print "    NO-OP"
+                            print("    NO-OP")
                         have_path = False
             elif c == "PD":
                 if p:
                     pt = [None, None]
                     for i, coord in enumerate(p):
-                        pt[i%2] = coord
-                        if i%2 == 1:
+                        pt[i % 2] = coord
+                        if i % 2 == 1:
                             if self.debug:
-                                print "    lineTo", pt[0], pt[1]
+                                print("    lineTo", pt[0], pt[1])
                             path.lineTo((pt[0], pt[1]))
-            #elif c == "SC":
+            # elif c == "SC":
             #    if len(p) == 4:
             #        newPage(p[2], p[3])
             #        fill(None)
@@ -98,10 +95,10 @@ class HPGLDraw(object):
             #        restore()
             elif c == "SP":
                 if self.debug:
-                    print c, p
+                    print(c, p)
                 if have_path:
                     if self.debug:
-                        print "    endPath (due to SP)"
+                        print("    endPath (due to SP)")
                     path.endPath()
                     _drawBotDrawingTool.drawPath(path)
                     have_path = False
@@ -111,8 +108,8 @@ class HPGLDraw(object):
                         if i == pen_index:
                             _drawBotDrawingTool.stroke(*c)
                             if self.debug:
-                                print "    stroke", c
+                                print("    stroke", c)
                 else:
                     _drawBotDrawingTool.stroke(None)
                     if self.debug:
-                        print "    stroke", None
+                        print("    stroke", None)
